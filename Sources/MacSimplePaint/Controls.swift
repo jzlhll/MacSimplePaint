@@ -6,11 +6,11 @@ enum Theme {
     static let selectionBorder = NSColor(hex: "666666")
     static let controlBackground = NSColor(hex: "F4F4F4")
     static let controlHover = NSColor(hex: "E8E8E8")
-    static let toolSelectionBackground = NSColor(hex: "EAEAEA")
+    static let toolSelectionBackground = NSColor(hex: "DDDDDD")
     static let ink = NSColor(hex: "272727")
     static let secondary = NSColor(hex: "858585")
     static let line = NSColor(hex: "E5E5E5")
-    static let sliderProgress = NSColor(hex: "C5C5C5")
+    static let sliderProgress = NSColor(hex: "B5B5B5")
     static let workspace = NSColor(hex: "F2F2F2")
     static let palette = ["263843", "FFFFFF", "84909C", "E96563", "ED9A50", "E9C955",
                           "75AE72", "33998C", "63B7D0", "5685CA", "9880BC", "D685A5"]
