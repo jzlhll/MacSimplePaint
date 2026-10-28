@@ -1,4 +1,4 @@
-# SimplePaint
+# 轻绘 · SimplePaint
 
 [简体中文](readme_cn.md)
 

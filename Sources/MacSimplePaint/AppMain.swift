@@ -51,7 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(item)
         }
         let app = submenu(L("轻绘"))
-        item(app, L("关于轻绘"), #selector(showAbout(_:)), target: self)
+        item(app, "About SimplePaint", #selector(showAbout(_:)), target: self)
         app.addItem(.separator())
         let languageItem = NSMenuItem(title: L("语言"), action: nil, keyEquivalent: "")
         let languageMenu = NSMenu(title: L("语言"))
@@ -156,8 +156,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
     @objc private func showAbout(_ sender: Any?) {
         NSApplication.shared.orderFrontStandardAboutPanel(options: [
-            .applicationName: L("轻绘 · MacSimplePaint"), .applicationVersion: "1.0",
-            .credits: NSAttributedString(string: L("简单画几笔，留住每一个灵感。\n原生 macOS 画图工具。"))
+            .applicationName: "SimplePaint", .applicationVersion: "", .version: "",
+            .credits: NSAttributedString(string: "Version 1.0\n\nA few simple strokes to capture every idea.\nA native macOS drawing app.")
         ])
     }
     @objc private func showHelp(_ sender: Any?) {
