@@ -70,7 +70,7 @@ final class CanvasView: NSView {
             context.setStrokeColor(NSColor.white.cgColor)
             context.setLineWidth(2 / editor.zoom)
             context.stroke(selection)
-            context.setStrokeColor(Theme.accent.cgColor)
+            context.setStrokeColor(NSColor(hex: "303030").cgColor)
             context.setLineWidth(1 / editor.zoom)
             context.setLineDash(phase: 0, lengths: [5 / editor.zoom, 4 / editor.zoom])
             context.stroke(selection)
@@ -278,7 +278,7 @@ final class CanvasView: NSView {
         let rect = rectangle(from: start, to: point)
         let tool = editor.tool, color = editor.color, width = editor.brushSize, filled = editor.fillShapes
         let origin = start
-        let arrowPadding: CGFloat = tool == .arrow || tool == .doubleArrow ? Swift.max(14, width * 3) : 0
+        let arrowPadding: CGFloat = tool.arrowStyle > 0 ? Swift.max(14, width * 3) : 0
         let padding = arrowPadding + width / 2 + 2
         let area = rect.insetBy(dx: -padding, dy: -padding).integral.intersection(bounds)
         guard area.width >= 1, area.height >= 1 else { return }
@@ -287,24 +287,7 @@ final class CanvasView: NSView {
         content.draw { context in
             context.translateBy(x: -area.minX, y: -area.minY)
             if tool.isLine {
-                if tool == .dashedLine {
-                    context.setLineDash(phase: 0, lengths: [Swift.max(8, width * 3), Swift.max(5, width * 2)])
-                }
-                context.setStrokeColor(color.cgColor)
-                context.setLineWidth(width)
-                context.move(to: origin); context.addLine(to: point)
-                if tool == .arrow || tool == .doubleArrow {
-                    let angle = atan2(point.y - origin.y, point.x - origin.x)
-                    let length = Swift.max(14, width * 3)
-                    func arrowHead(at tip: CGPoint, direction: CGFloat) {
-                        context.move(to: CGPoint(x: tip.x - cos(direction - .pi / 6) * length, y: tip.y - sin(direction - .pi / 6) * length))
-                        context.addLine(to: tip)
-                        context.addLine(to: CGPoint(x: tip.x - cos(direction + .pi / 6) * length, y: tip.y - sin(direction + .pi / 6) * length))
-                    }
-                    arrowHead(at: point, direction: angle)
-                    if tool == .doubleArrow { arrowHead(at: origin, direction: angle + .pi) }
-                }
-                context.strokePath()
+                LineRenderer.draw(tool, from: origin, to: point, context: context, color: color, width: width)
             } else {
                 ShapeRenderer.draw(tool, in: rect, context: context, filled: filled, color: color, lineWidth: width)
             }

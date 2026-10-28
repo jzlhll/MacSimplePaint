@@ -1,17 +1,27 @@
 import AppKit
 
 enum Theme {
-    static let accent = NSColor(hex: "303030")
-    static let accentPressed = NSColor(hex: "171717")
-    static let selectionBorder = NSColor(hex: "666666")
-    static let controlBackground = NSColor(hex: "F4F4F4")
-    static let controlHover = NSColor(hex: "E8E8E8")
-    static let toolSelectionBackground = NSColor(hex: "DDDDDD")
-    static let ink = NSColor(hex: "272727")
-    static let secondary = NSColor(hex: "858585")
-    static let line = NSColor(hex: "E5E5E5")
-    static let sliderProgress = NSColor(hex: "B5B5B5")
-    static let workspace = NSColor(hex: "F2F2F2")
+    private static func adaptive(_ light: String, _ dark: String) -> NSColor {
+        NSColor(name: nil) { appearance in
+            NSColor(hex: appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? dark : light)
+        }
+    }
+    static let accent = adaptive("303030", "E5E5E5")
+    static let accentPressed = adaptive("171717", "FFFFFF")
+    static let selectionBorder = adaptive("666666", "B0B0B0")
+    static let controlBackground = adaptive("F4F4F4", "303030")
+    static let controlHover = adaptive("E8E8E8", "3D3D3D")
+    static let toolSelectionBackground = adaptive("DDDDDD", "505050")
+    static let ink = adaptive("272727", "EEEEEE")
+    static let secondary = adaptive("858585", "A0A0A0")
+    static let sizeText = NSColor(hex: "666666")
+    static let line = adaptive("E5E5E5", "414141")
+    static let sliderProgress = adaptive("B5B5B5", "828282")
+    static let workspace = adaptive("F2F2F2", "191919")
+    static let panel = adaptive("FFFFFF", "242424")
+    static let documentName = adaptive("333333", "DDDDDD")
+    static let knob = adaptive("FFFFFF", "BBBBBB")
+    static let onAccent = adaptive("FFFFFF", "272727")
     static let palette = ["263843", "FFFFFF", "84909C", "E96563", "ED9A50", "E9C955",
                           "75AE72", "33998C", "63B7D0", "5685CA", "9880BC", "D685A5"]
 }
@@ -66,9 +76,7 @@ func stack(_ views: [NSView] = [], vertical: Bool = false, spacing: CGFloat = 8)
 }
 
 func separator(vertical: Bool = false) -> NSView {
-    let view = NSView()
-    view.wantsLayer = true
-    view.layer?.backgroundColor = Theme.line.cgColor
+    let view = ThemeSurfaceView(color: Theme.line)
     view.fixed(width: vertical ? 1 : nil, height: vertical ? nil : 1)
     return view
 }
@@ -119,7 +127,7 @@ final class ActionButton: NSButton {
         context.saveGState()
         switch style {
         case .primary:
-            foreground = .white
+            foreground = Theme.onAccent
             if isEnabled { context.setShadow(offset: CGSize(width: 0, height: -1), blur: 4, color: Theme.accent.withAlphaComponent(0.18).cgColor) }
             (active ? Theme.accentPressed : Theme.accent).setFill()
             path.fill()
@@ -136,7 +144,7 @@ final class ActionButton: NSButton {
             path.stroke()
         case .standard:
             foreground = Theme.ink
-            (active ? Theme.controlBackground : NSColor.white).setFill()
+            (active ? Theme.controlBackground : Theme.panel).setFill()
             path.fill()
             (active ? Theme.accent.withAlphaComponent(0.4) : Theme.line).setStroke()
             path.lineWidth = 1
@@ -187,10 +195,13 @@ final class GrayscaleSliderCell: NSSliderCell {
     }
 
     override func drawKnob(_ knobRect: NSRect) {
-        let knob = NSBezierPath(ovalIn: knobRect.insetBy(dx: 1, dy: 1))
+        let diameter = Swift.min(knobRect.width, knobRect.height) - 2
+        let rect = NSRect(x: knobRect.midX - diameter / 2, y: knobRect.midY - diameter / 2,
+                          width: diameter, height: diameter)
+        let knob = NSBezierPath(ovalIn: rect)
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current?.cgContext.setShadow(offset: CGSize(width: 0, height: -1), blur: 3, color: NSColor.black.withAlphaComponent(0.12).cgColor)
-        NSColor.white.setFill()
+        Theme.knob.setFill()
         knob.fill()
         NSGraphicsContext.restoreGraphicsState()
         Theme.line.setStroke()
@@ -267,7 +278,7 @@ final class SwatchButton: NSButton {
 // 工具图标直接以矢量路径绘制，与参考程序的图标形状、编排均独立。
 final class ToolButton: NSButton {
     let tool: PaintTool
-    private var showsTitle: Bool { !tool.isLine && !tool.isShape && tool != .more }
+    private var showsTitle: Bool { !tool.isLine && !tool.isShape && tool != .more && tool != .moreLines }
     var selected = false {
         didSet {
             needsDisplay = true
@@ -336,6 +347,11 @@ final class ToolButton: NSButton {
             context.strokePath()
         }
         func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x, y: y) }
+        if tool.isLine {
+            LineRenderer.draw(tool, from: p(3, 21), to: p(22, 3), context: context, color: tint, width: 1.5, preview: true)
+            context.restoreGState()
+            return
+        }
         switch tool {
         case .brush:
             lines([p(10, 15), p(18, 3), p(21, 5), p(13, 17)], close: true)
@@ -357,21 +373,12 @@ final class ToolButton: NSButton {
         case .text:
             lines([p(4, 6), p(4, 3), p(22, 3), p(22, 6)])
             lines([p(13, 3), p(13, 22)]); lines([p(9, 22), p(17, 22)])
-        case .line: lines([p(3, 21), p(22, 3)])
-        case .dashedLine:
-            context.setLineDash(phase: 0, lengths: [3, 3])
-            lines([p(3, 21), p(22, 3)])
-        case .doubleArrow:
-            lines([p(3, 21), p(21, 3), p(12, 3)])
-            lines([p(21, 3), p(21, 12)])
-            lines([p(3, 12), p(3, 21), p(12, 21)])
-        case .arrow: lines([p(3, 21), p(21, 4), p(11, 4)]); lines([p(21, 4), p(21, 14)])
         case .rectangle: context.stroke(CGRect(x: 3, y: 5, width: 19, height: 15))
         case .roundedRectangle:
             context.addPath(CGPath(roundedRect: CGRect(x: 3, y: 5, width: 19, height: 15), cornerWidth: 4, cornerHeight: 4, transform: nil)); context.strokePath()
         case .ellipse: context.strokeEllipse(in: CGRect(x: 3, y: 4, width: 19, height: 17))
         case .triangle: lines([p(12, 3), p(23, 21), p(2, 21)], close: true)
-        case .more:
+        case .more, .moreLines:
             for point in [p(5, 5), p(18, 5), p(5, 18), p(18, 18)] {
                 context.strokeEllipse(in: CGRect(x: point.x - 3, y: point.y - 3, width: 6, height: 6))
             }
@@ -379,7 +386,8 @@ final class ToolButton: NSButton {
             context.setLineDash(phase: 0, lengths: [3, 3])
             context.stroke(CGRect(x: 3, y: 3, width: 19, height: 19))
         default:
-            ShapeRenderer.draw(tool, in: CGRect(x: 2, y: 2, width: 20, height: 20), context: context, filled: false, color: tint, lineWidth: 1.5)
+            let rect = CGRect(x: 2, y: tool == .heart ? 3 : 2, width: 20, height: tool == .heart ? 18 : 20)
+            ShapeRenderer.draw(tool, in: rect, context: context, filled: false, color: tint, lineWidth: 1.5)
         }
         context.restoreGState()
     }
@@ -396,10 +404,9 @@ final class ShapeStyleControl: NSView {
         let fill = ShapeStyleButton(filled: true) { [weak self] in self?.select(filled: true) }
         buttons = [outline, fill]
         let row = stack(buttons, spacing: 4)
-        row.distribution = .fillEqually
         addSubview(row)
         row.pin(to: self)
-        buttons.forEach { $0.fixed(height: 46) }
+        buttons.forEach { $0.fixed(width: 44, height: 46) }
         updateSelection()
     }
     required init?(coder: NSCoder) { fatalError() }
@@ -469,7 +476,7 @@ private final class ShapeStyleButton: NSButton {
 
 // 选区组的操作按钮使用无背景图标，不显示持续选中状态。
 final class RailActionButton: NSButton {
-    enum Kind { case clear, crop, more }
+    enum Kind { case clear, crop, more, rotate, resize }
     private let kind: Kind
     private let handler: (NSButton) -> Void
     private let caption: String
@@ -483,6 +490,14 @@ final class RailActionButton: NSButton {
             caption = L("清空")
             description = L("清空画布")
             symbol = nil
+        case .rotate:
+            caption = L("旋转")
+            description = L("顺时针旋转 90°")
+            symbol = NSImage(systemSymbolName: "rotate.right", accessibilityDescription: nil)
+        case .resize:
+            caption = L("尺寸")
+            description = L("画布尺寸…")
+            symbol = NSImage(systemSymbolName: "arrow.up.left.and.arrow.down.right", accessibilityDescription: nil)
         case .crop:
             caption = L("裁剪")
             description = L("裁剪到选区")

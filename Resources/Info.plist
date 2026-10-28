@@ -5,9 +5,9 @@
 	<key>CFBundleIdentifier</key>
 	<string>com.allan.MacSimplePaint</string>
 	<key>CFBundleName</key>
-	<string>MacSimplePaint</string>
+	<string>SimplePaint</string>
 	<key>CFBundleDisplayName</key>
-	<string>轻绘</string>
+	<string>SimplePaint</string>
 	<key>CFBundleExecutable</key>
 	<string>MacSimplePaint</string>
 	<key>CFBundlePackageType</key>

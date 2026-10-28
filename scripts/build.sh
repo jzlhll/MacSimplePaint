@@ -12,7 +12,7 @@ python3 scripts/sign_macos.py --check
 mkdir -p .build build
 build_work="$(mktemp -d "$PWD/.build/paint-build.XXXXXX")"
 trap 'rm -rf "$build_work"' EXIT
-staged_app="$build_work/轻绘.app"
+staged_app="$build_work/SimplePaint.app"
 mkdir -p "$staged_app/Contents/MacOS" "$staged_app/Contents/Resources"
 optimization="-O"
 if [[ "$configuration" == "debug" ]]; then optimization="-Onone"; fi

@@ -6,7 +6,7 @@
 "将图片拖入窗口即可打开" = "Glissez une image dans la fenêtre pour l’ouvrir";
 "按住 Shift 约束形状比例或角度" = "Maintenez Maj pour contraindre proportions ou angles";
 "⌘Z 撤销，⇧⌘Z 重做" = "⌘Z annule ; ⇧⌘Z rétablit";
-"轻绘" = "轻绘";
+"轻绘" = "SimplePaint";
 "新建" = "Nouveau";
 "打开" = "Ouvrir";
 "保存" = "Enregistrer";
@@ -156,11 +156,11 @@
 "换个面，发现不一样的世界。" = "Une autre face, un autre monde.";
 "向着心中的一点，慢慢靠近。" = "Approchez doucement de votre but.";
 "框住喜欢的，留下想要的。" = "Cadrez ce qui vous plaît, gardez l’essentiel.";
-"关于轻绘" = "À propos de 轻绘";
+"关于轻绘" = "À propos de SimplePaint";
 "服务" = "Services";
-"隐藏轻绘" = "Masquer 轻绘";
+"隐藏轻绘" = "Masquer SimplePaint";
 "显示全部" = "Tout afficher";
-"退出轻绘" = "Quitter 轻绘";
+"退出轻绘" = "Quitter SimplePaint";
 "打开…" = "Ouvrir…";
 "最近打开" = "Ouvrir l’élément récent";
 "关闭窗口" = "Fermer la fenêtre";
@@ -178,20 +178,20 @@
 "最小化" = "Réduire";
 "缩放" = "Zoom";
 "帮助" = "Aide";
-"轻绘使用说明" = "Aide de 轻绘";
+"轻绘使用说明" = "Aide de SimplePaint";
 "暂无最近文件" = "Aucun fichier récent";
 "清除记录" = "Effacer le menu";
-"轻绘 · MacSimplePaint" = "轻绘 · MacSimplePaint";
+"轻绘 · MacSimplePaint" = "SimplePaint";
 "简单画几笔，留住每一个灵感。\n原生 macOS 画图工具。" = "Quelques traits pour saisir chaque idée.\nUne app de dessin native pour macOS.";
 "语言" = "Langue";
 "跟随系统" = "Langue du système";
 "语言已更改" = "Langue modifiée";
-"重新打开轻绘后生效。请先保存正在编辑的图片。" = "La nouvelle langue sera appliquée à la réouverture de 轻绘. Enregistrez vos images avant de quitter.";
+"重新打开轻绘后生效。请先保存正在编辑的图片。" = "La nouvelle langue sera appliquée à la réouverture de SimplePaint. Enregistrez vos images avant de quitter.";
 "好" = "OK";
 "help.intro" = "Commencez sur une toile blanche. Choisissez un outil, un contour ou un remplissage dans Formes, puis réglez la couleur, l’épaisseur et la taille du texte.";
 "help.gestures" = "Maj contraint les proportions ou les angles. Texte, lignes et formes restent sélectionnés et peuvent être déplacés plusieurs fois. Vous pouvez copier, supprimer ou rogner une sélection. Une grande image collée agrandit la toile.";
 "help.colors" = "Douze couleurs sont prédéfinies. Choisissez-en d’autres dans le panneau système. Les cinq dernières couleurs personnalisées sont mémorisées.";
-"help.files" = "Glissez une image dans la fenêtre ou choisissez Ouvrir avec → 轻绘 dans le Finder. Seule la première image d’un GIF est modifiée.";
+"help.files" = "Glissez une image dans la fenêtre ou choisissez Ouvrir avec → SimplePaint dans le Finder. Seule la première image d’un GIF est modifiée.";
 "PNG 图片" = "Image PNG";
 "JPEG 图片" = "Image JPEG";
 "TIFF 图片" = "Image TIFF";
@@ -207,3 +207,21 @@
 "确认" = "Confirmer";
 "请输入有效的文件名，不要包含 / 或 :。" = "Saisissez un nom de fichier valide sans / ni :.";
 "无法重命名文件。" = "Impossible de renommer le fichier.";
+"字体" = "Police";
+"系统字体" = "Police système";
+
+"更多线条" = "Autres lignes";
+
+"长短虚线" = "Tirets longs et courts";
+
+"空心三角" = "Triangle creux";
+
+"实心三角" = "Triangle plein";
+
+"旋转" = "Pivoter";
+
+"尺寸" = "Taille";
+
+"深色模式" = "Mode sombre";
+
+"浅色模式" = "Mode clair";

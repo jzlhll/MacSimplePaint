@@ -7,9 +7,9 @@ import uuid
 
 root = Path(__file__).resolve().parent.parent
 source = Path(sys.argv[1]).resolve()
-output = root / "build/轻绘.app"
+output = root / "build/SimplePaint.app"
 retired = root / ".build/retired-apps"
-backup = retired / ("轻绘-" + uuid.uuid4().hex + ".app")
+backup = retired / ("SimplePaint-" + uuid.uuid4().hex + ".app")
 if output.is_symlink():
     raise SystemExit("Refusing to replace an app symlink")
 if output.exists():

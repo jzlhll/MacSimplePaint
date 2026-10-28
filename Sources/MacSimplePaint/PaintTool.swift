@@ -1,6 +1,9 @@
 import AppKit
 
 enum PaintTool: String, CaseIterable {
+    case dashedArrow, moreLines, dashDotLine, dashedDoubleArrow, dashDotArrow, dashDotDoubleArrow
+    case hollowArrow, hollowDoubleArrow, dashedHollowArrow, dashedHollowDoubleArrow, dashDotHollowArrow, dashDotHollowDoubleArrow
+    case solidArrow, solidDoubleArrow, dashedSolidArrow, dashedSolidDoubleArrow, dashDotSolidArrow, dashDotSolidDoubleArrow
     case brush, pencil, eraser, fill, picker, text, line, dashedLine, arrow, doubleArrow, rectangle, roundedRectangle, ellipse, more, selection
     case triangle, rightTriangle, diamond, pentagon, hexagon, star, fourPointStar, sixPointStar
     case trapezoid, parallelogram, singleRoundedRectangle, chevron, blockArrow, leftArrow, upArrow, downArrow
@@ -14,7 +17,28 @@ enum PaintTool: String, CaseIterable {
         .singleRoundedRectangle, .chevron, .heart, .cloud, .cylinder, .cube, .cone
     ]
 
+    static let lineTools: [PaintTool] = [.line, .dashedLine, .dashDotLine,
+        .arrow, .doubleArrow, .dashedArrow, .dashedDoubleArrow, .dashDotArrow, .dashDotDoubleArrow,
+        .hollowArrow, .hollowDoubleArrow, .dashedHollowArrow, .dashedHollowDoubleArrow, .dashDotHollowArrow, .dashDotHollowDoubleArrow,
+        .solidArrow, .solidDoubleArrow, .dashedSolidArrow, .dashedSolidDoubleArrow, .dashDotSolidArrow, .dashDotSolidDoubleArrow]
+    var dashStyle: Int {
+        if rawValue.lowercased().contains("dashdot") { return 2 }
+        return rawValue.lowercased().contains("dashed") ? 1 : 0
+    }
+    var arrowStyle: Int {
+        guard rawValue.lowercased().contains("arrow"), isLine else { return 0 }
+        if rawValue.lowercased().contains("hollow") { return 2 }
+        return rawValue.lowercased().contains("solid") ? 3 : 1
+    }
+    var hasTwoHeads: Bool { rawValue.lowercased().contains("double") }
+
     var title: String {
+        if isLine && ![PaintTool.line, .dashedLine, .arrow, .doubleArrow].contains(self) {
+            if self == .dashDotLine { return L("长短虚线") }
+            let pattern = dashStyle == 2 ? L("长短虚线") : (dashStyle == 1 ? L("虚线") : L("直线"))
+            let head = arrowStyle == 2 ? L("空心三角") : (arrowStyle == 3 ? L("实心三角") : "")
+            return [pattern, head, L(hasTwoHeads ? "双箭头" : "单箭头")].filter { !$0.isEmpty }.joined(separator: " · ")
+        }
         switch self {
         case .brush: return L("画笔")
         case .pencil: return L("铅笔")
@@ -29,7 +53,7 @@ enum PaintTool: String, CaseIterable {
         case .rectangle: return L("矩形")
         case .roundedRectangle: return L("圆角")
         case .ellipse: return L("椭圆")
-        case .more: return L("更多")
+        case .more, .moreLines: return L("更多")
         case .selection: return L("选区")
         case .triangle: return L("三角形")
         case .rightTriangle: return L("直角三角形")
@@ -55,6 +79,7 @@ enum PaintTool: String, CaseIterable {
         case .cylinder: return L("圆柱体")
         case .cube: return L("立方体")
         case .cone: return L("圆锥体")
+        default: return L("线条")
         }
     }
 
@@ -98,6 +123,7 @@ enum PaintTool: String, CaseIterable {
         case .cube: return L("换个面，发现不一样的世界。")
         case .cone: return L("向着心中的一点，慢慢靠近。")
         case .selection: return L("框住喜欢的，留下想要的。")
+        default: return L("心之所向，就是前进的方向。")
         }
     }
 
@@ -119,7 +145,7 @@ enum PaintTool: String, CaseIterable {
     }
     var isBubble: Bool { Self.bubbleShapes.contains(self) }
     var isExtraShape: Bool { Self.extraShapes.contains(self) }
-    var isLine: Bool { [.line, .dashedLine, .arrow, .doubleArrow].contains(self) }
+    var isLine: Bool { Self.lineTools.contains(self) }
     var isShape: Bool { [.rectangle, .roundedRectangle, .ellipse].contains(self) || isExtraShape }
 }
 
@@ -171,11 +197,14 @@ enum ShapeRenderer {
         case .upArrow: polygon([(0.5, 0), (1, 0.38), (0.72, 0.38), (0.72, 1), (0.28, 1), (0.28, 0.38), (0, 0.38)])
         case .downArrow: polygon([(0.28, 0), (0.72, 0), (0.72, 0.62), (1, 0.62), (0.5, 1), (0, 0.62), (0.28, 0.62)])
         case .heart:
-            path.move(to: p(0.5, 0.97))
-            path.addCurve(to: p(0.04, 0.3), control1: p(0.18, 0.7), control2: p(-0.08, 0.54))
-            path.addCurve(to: p(0.5, 0.2), control1: p(0.1, -0.08), control2: p(0.44, -0.04))
-            path.addCurve(to: p(0.96, 0.3), control1: p(0.56, -0.04), control2: p(0.9, -0.08))
-            path.addCurve(to: p(0.5, 0.97), control1: p(1.08, 0.54), control2: p(0.82, 0.7)); path.closeSubpath()
+            path.move(to: p(0.5, 0.98))
+            path.addCurve(to: p(0.02, 0.32), control1: p(0.26, 0.8), control2: p(0.02, 0.6))
+            path.addCurve(to: p(0.28, 0.04), control1: p(0.02, 0.15), control2: p(0.13, 0.04))
+            path.addCurve(to: p(0.5, 0.18), control1: p(0.38, 0.04), control2: p(0.46, 0.09))
+            path.addCurve(to: p(0.72, 0.04), control1: p(0.54, 0.09), control2: p(0.62, 0.04))
+            path.addCurve(to: p(0.98, 0.32), control1: p(0.87, 0.04), control2: p(0.98, 0.15))
+            path.addCurve(to: p(0.5, 0.98), control1: p(0.98, 0.6), control2: p(0.74, 0.8))
+            path.closeSubpath()
         case .roundedBubble:
             path.move(to: p(0.12, 0)); path.addLine(to: p(0.88, 0))
             path.addQuadCurve(to: p(1, 0.12), control: p(1, 0)); path.addLine(to: p(1, 0.66))
@@ -232,5 +261,44 @@ enum ShapeRenderer {
             context.addPath(hidden); context.strokePath()
         }
         context.restoreGState()
+    }
+}
+
+// 预览和画布共用线段与箭头，虚线仅影响线身，箭头始终完整。
+enum LineRenderer {
+    static func draw(_ tool: PaintTool, from start: CGPoint, to end: CGPoint, context: CGContext,
+                     color: NSColor, width: CGFloat, preview: Bool = false) {
+        let distance = hypot(end.x - start.x, end.y - start.y)
+        guard distance > 0 else { return }
+        context.saveGState()
+        defer { context.restoreGState() }
+        context.setStrokeColor(color.cgColor)
+        context.setFillColor(color.cgColor)
+        context.setLineWidth(width)
+        context.setLineCap(.round)
+        context.setLineJoin(.round)
+        let angle = atan2(end.y - start.y, end.x - start.x)
+        let length = Swift.min(distance * (tool.hasTwoHeads ? 0.4 : 0.65), preview ? 8 : Swift.max(14, width * 3))
+        let inset = tool.arrowStyle >= 2 ? length * cos(.pi / 6) : 0
+        func offset(_ point: CGPoint, _ amount: CGFloat) -> CGPoint {
+            CGPoint(x: point.x + cos(angle) * amount, y: point.y + sin(angle) * amount)
+        }
+        let unit = preview ? 1 : Swift.max(1, width / 2)
+        if tool.dashStyle == 1 { context.setLineDash(phase: 0, lengths: [4 * unit, 3 * unit]) }
+        if tool.dashStyle == 2 { context.setLineDash(phase: 0, lengths: [7 * unit, 3 * unit, 2 * unit, 3 * unit]) }
+        context.move(to: offset(start, tool.hasTwoHeads ? inset : 0))
+        context.addLine(to: offset(end, -inset))
+        context.strokePath()
+        context.setLineDash(phase: 0, lengths: [])
+        guard tool.arrowStyle > 0 else { return }
+        func head(_ tip: CGPoint, _ direction: CGFloat) {
+            context.move(to: CGPoint(x: tip.x - cos(direction - .pi / 6) * length, y: tip.y - sin(direction - .pi / 6) * length))
+            context.addLine(to: tip)
+            context.addLine(to: CGPoint(x: tip.x - cos(direction + .pi / 6) * length, y: tip.y - sin(direction + .pi / 6) * length))
+            if tool.arrowStyle >= 2 { context.closePath() }
+            context.drawPath(using: tool.arrowStyle == 3 ? .fillStroke : .stroke)
+        }
+        head(end, angle)
+        if tool.hasTwoHeads { head(start, angle + .pi) }
     }
 }

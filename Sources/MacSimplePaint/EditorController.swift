@@ -12,6 +12,18 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
     var brushSize: CGFloat = 6
     var fillShapes = false
     var fontSize: CGFloat = 32
+    private var textFontFamily: String?
+    private let railWidth: CGFloat = 113.4
+    private let inspectorWidth: CGFloat = 129
+    private let brushControls = stack([], vertical: true, spacing: 6)
+    private let textControls = stack([], vertical: true, spacing: 6)
+    private var drawingFont: NSFont {
+        if let textFontFamily,
+           let font = NSFontManager.shared.font(withFamily: textFontFamily, traits: [], weight: 5, size: fontSize) {
+            return font
+        }
+        return .systemFont(ofSize: fontSize)
+    }
     var zoom: CGFloat = 0.75
     private var toolButtons: [PaintTool: ToolButton] = [:]
     private var paletteButtons: [SwatchButton] = []
@@ -20,8 +32,8 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
     private let currentSwatch = SwatchButton(color: NSColor(hex: Theme.palette[0]), size: 40)
     private let hexField = NSTextField(string: "#" + Theme.palette[0])
     private let sizeSlider = NSSlider(value: 6, minValue: 1, maxValue: 48, target: nil, action: nil)
-    private let sizeLabel = label("6 px", size: 12, weight: .medium)
-    private let fontSizeLabel = label("32 px", size: 12, weight: .medium)
+    private let sizeLabel = label("6 px", size: 12, weight: .medium, color: Theme.sizeText)
+    private let fontSizeLabel = label("32 px", size: 12, weight: .medium, color: Theme.sizeText)
     private let statusLabel = label(L("画笔 · 拖动开始绘画"), size: 11, color: Theme.secondary)
     private let tipLabel = label("", size: 10, color: Theme.secondary)
     private var tipTimer: Timer?
@@ -57,8 +69,8 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         super.init(window: window)
         window.minSize = NSSize(width: 980, height: 760)
         window.title = L("轻绘")
-        window.appearance = NSAppearance(named: .aqua)
-        window.backgroundColor = .white
+        window.backgroundColor = Theme.panel
+        window.contentView = ThemeSurfaceView(color: Theme.panel)
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.titlebarSeparatorStyle = .none
@@ -66,9 +78,13 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         window.center()
         canvas.editor = self
         stage.editor = self
-        recentColors = Array((UserDefaults.standard.stringArray(forKey: "recentCustomColors") ?? []).filter {
+        let storedColors = UserDefaults.standard.stringArray(forKey: "recentCustomColors") ?? []
+        recentColors = Array(storedColors.filter {
             $0.count == 6 && UInt32($0, radix: 16) != nil
-        }.prefix(5))
+        }.prefix(3))
+        if recentColors != storedColors {
+            UserDefaults.standard.set(recentColors, forKey: "recentCustomColors")
+        }
         buildInterface()
         refreshColors()
         refreshCanvas()
@@ -134,7 +150,7 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         documentNameField.isEditable = false
         documentNameField.isSelectable = false
         documentNameField.drawsBackground = false
-        documentNameField.textColor = paintDocument.fileURL == nil ? Theme.secondary : NSColor(hex: "333333")
+        documentNameField.textColor = paintDocument.fileURL == nil ? Theme.secondary : Theme.documentName
         documentNameField.alignment = .right
         documentNameField.lineBreakMode = .byTruncatingMiddle
         documentExtensionLabel.isHidden = true
@@ -223,7 +239,7 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
             else { self.beginRename() }
         }
         edit.style = .plain
-        edit.foregroundColor = NSColor(hex: "333333")
+        edit.foregroundColor = Theme.documentName
         edit.fixed(width: 24, height: 28)
         renameButton = edit
         documentNameField.font = .systemFont(ofSize: 13, weight: .medium)
@@ -246,13 +262,20 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
             header.topAnchor.constraint(equalTo: root.topAnchor),
             header.heightAnchor.constraint(equalToConstant: 52)
         ])
+        let appIcon = NSImageView(image: NSApplication.shared.applicationIconImage)
+        appIcon.imageScaling = .scaleProportionallyUpOrDown
+        appIcon.fixed(width: 28, height: 28)
+        appIcon.setAccessibilityLabel(L("轻绘"))
+        header.addSubview(appIcon)
         header.addSubview(actions)
         header.addSubview(name)
         actions.translatesAutoresizingMaskIntoConstraints = false
         name.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            actions.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 108),
+            appIcon.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: railWidth),
+            actions.leadingAnchor.constraint(equalTo: appIcon.trailingAnchor, constant: 10),
             actions.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+            appIcon.centerYAnchor.constraint(equalTo: header.centerYAnchor),
             name.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
             name.centerYAnchor.constraint(equalTo: header.centerYAnchor),
             name.leadingAnchor.constraint(greaterThanOrEqualTo: actions.trailingAnchor, constant: 24),
@@ -281,11 +304,11 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         [rail, center, inspector].forEach { body.addSubview($0); $0.translatesAutoresizingMaskIntoConstraints = false }
         NSLayoutConstraint.activate([
             rail.leadingAnchor.constraint(equalTo: body.leadingAnchor), rail.topAnchor.constraint(equalTo: body.topAnchor),
-            rail.bottomAnchor.constraint(equalTo: body.bottomAnchor), rail.widthAnchor.constraint(equalToConstant: 108),
+            rail.bottomAnchor.constraint(equalTo: body.bottomAnchor), rail.widthAnchor.constraint(equalToConstant: railWidth),
             center.leadingAnchor.constraint(equalTo: rail.trailingAnchor), center.topAnchor.constraint(equalTo: body.topAnchor),
             center.bottomAnchor.constraint(equalTo: body.bottomAnchor), center.trailingAnchor.constraint(equalTo: inspector.leadingAnchor),
             inspector.trailingAnchor.constraint(equalTo: body.trailingAnchor), inspector.topAnchor.constraint(equalTo: body.topAnchor),
-            inspector.bottomAnchor.constraint(equalTo: body.bottomAnchor), inspector.widthAnchor.constraint(equalToConstant: 216)
+            inspector.bottomAnchor.constraint(equalTo: body.bottomAnchor), inspector.widthAnchor.constraint(equalToConstant: inspectorWidth)
         ])
         buildRail(in: rail)
         let inspectorScroll = NSScrollView()
@@ -306,9 +329,7 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
             inspectorScroll.bottomAnchor.constraint(equalTo: inspector.bottomAnchor)
         ])
         buildInspector(in: inspectorContent)
-        let canvasHeader = NSView()
-        canvasHeader.wantsLayer = true
-        canvasHeader.layer?.backgroundColor = Theme.workspace.cgColor
+        let canvasHeader = ThemeSurfaceView(color: Theme.workspace)
         center.addSubview(canvasHeader)
         center.addSubview(scrollView)
         canvasHeader.translatesAutoresizingMaskIntoConstraints = false
@@ -354,7 +375,8 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         fit.fixed(height: 26)
         zoomLabel.alignment = .center
         zoomLabel.fixed(width: 48)
-        let status = stack([statusLabel, NSView(), dimensionLabel, separator(vertical: true), minus, zoomLabel, plus, fit], spacing: 10)
+        let appearanceButtons = stack(AppearanceMode.allCases.map { AppearanceButton(mode: $0) }, spacing: 3)
+        let status = stack([statusLabel, NSView(), dimensionLabel, separator(vertical: true), minus, zoomLabel, plus, fit, separator(vertical: true), appearanceButtons], spacing: 10)
         footer.addSubview(status)
         status.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -382,37 +404,88 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         updateHistory()
     }
 
-    private func buildRail(in parent: NSView) {
-        var groups: [NSView] = [label(L("绘图工具"), size: 11, weight: .semibold, color: Theme.secondary)]
-        func row(_ tools: [PaintTool]) -> NSStackView {
-            stack(tools.map { tool in
-                let button = ToolButton(tool: tool)
-                button.handler = { [weak self, weak button] in
-                    guard let self else { return }
-                    if tool == .more, let button { self.showMoreShapes(from: button) }
-                    else { self.selectTool(tool) }
-                }
-                button.selected = tool == self.tool
-                toolButtons[tool] = button
-                return button
-            }, spacing: 4)
+    private func toolRow(_ tools: [PaintTool]) -> NSStackView {
+        stack(tools.map { tool in
+            let button = ToolButton(tool: tool)
+            button.handler = { [weak self, weak button] in
+                guard let self else { return }
+                if tool == .more || tool == .moreLines, let button { self.showMoreShapes(from: button, lines: tool == .moreLines) }
+                else { self.selectTool(tool) }
+            }
+            button.selected = tool == self.tool
+            toolButtons[tool] = button
+            return button
+        }, spacing: 4)
+    }
+
+    private func sectionHeading(_ title: String) -> NSView {
+        let heading = label(L(title), size: 11, weight: .semibold, color: Theme.secondary)
+        let row = stack([heading, NSView()], spacing: 4)
+        row.fixed(height: 36)
+        return row
+    }
+
+    private func buildTextControls() -> [NSView] {
+        sizeSlider.applyGrayscaleStyle()
+        sizeSlider.target = self
+        sizeSlider.action = #selector(sizeChanged(_:))
+        sizeSlider.isContinuous = true
+        sizeSlider.setAccessibilityLabel(L("笔画粗细"))
+        let sizeTitle = label(L("笔画粗细"), size: 11, color: Theme.sizeText)
+        sizeTitle.maximumNumberOfLines = 2
+        sizeTitle.lineBreakMode = .byWordWrapping
+        let sizeHeading = stack([sizeTitle, NSView(), sizeLabel], spacing: 4)
+        let font = NSSlider(value: 32, minValue: 8, maxValue: 150, target: self, action: #selector(fontChanged(_:)))
+        font.applyGrayscaleStyle()
+        font.isContinuous = true
+        font.setAccessibilityLabel(L("文字大小"))
+        let fontTitle = label(L("文字大小"), size: 11, color: Theme.sizeText)
+        fontTitle.maximumNumberOfLines = 2
+        fontTitle.lineBreakMode = .byWordWrapping
+        let fontHeading = stack([fontTitle, NSView(), fontSizeLabel], spacing: 4)
+        let fontFamily = NSPopUpButton(frame: .zero, pullsDown: false)
+        fontFamily.font = .systemFont(ofSize: 11)
+        fontFamily.fixed(height: 28)
+        fontFamily.addItem(withTitle: L("系统字体"))
+        let fontManager = NSFontManager.shared
+        let families = fontManager.availableFontFamilies.filter { !$0.hasPrefix(".") }.map { family in
+            (family: family, title: fontManager.localizedName(forFamily: family, face: nil))
+        }.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+        for item in families {
+            guard fontManager.font(withFamily: item.family, traits: [], weight: 5, size: fontSize) != nil else { continue }
+            fontFamily.addItem(withTitle: item.title)
+            fontFamily.lastItem?.representedObject = item.family
         }
+        fontFamily.target = self
+        fontFamily.action = #selector(fontFamilyChanged(_:))
+        fontFamily.setAccessibilityLabel(L("字体"))
+        for view in [sizeHeading, sizeSlider] {
+            brushControls.addArrangedSubview(view)
+            view.translatesAutoresizingMaskIntoConstraints = false
+            view.widthAnchor.constraint(equalTo: brushControls.widthAnchor).isActive = true
+        }
+        for view in [fontHeading, font, label(L("字体"), size: 11, color: Theme.secondary), fontFamily] {
+            textControls.addArrangedSubview(view)
+            view.translatesAutoresizingMaskIntoConstraints = false
+            view.widthAnchor.constraint(equalTo: textControls.widthAnchor).isActive = true
+        }
+        brushControls.isHidden = tool == .text
+        textControls.isHidden = tool != .text
+        return [brushControls, textControls]
+    }
+
+    private func buildRail(in parent: NSView) {
         let fillControl = ShapeStyleControl(frame: .zero)
-        fillControl.fixed(width: 92, height: 46)
+        fillControl.fixed(height: 46)
         fillControl.onChange = { [weak self] filled in self?.fillShapes = filled }
-        let crop = RailActionButton(kind: .crop) { [weak self] _ in self?.cropSelection(nil) }
-        cropButton = crop
-        crop.isEnabled = false
-        let clear = RailActionButton(kind: .clear) { [weak self] _ in self?.clearCanvas(nil) }
-        let more = RailActionButton(kind: .more) { [weak self] button in self?.showCanvasActions(from: button) }
-        let selectionRow = row([.selection])
-        selectionRow.addArrangedSubview(crop)
-        let actionRow = stack([clear, more], spacing: 4)
-        groups += [row([.brush, .pencil]), row([.eraser, .fill]), row([.picker, .text]), separator(),
-                   label(L("线条"), size: 11, weight: .semibold, color: Theme.secondary),
-                   row([.line, .dashedLine]), row([.arrow, .doubleArrow]), separator(),
-                   label(L("形状"), size: 11, weight: .semibold, color: Theme.secondary),
-                   row([.rectangle, .roundedRectangle]), row([.ellipse, .more]), fillControl, separator(), label(L("选区"), size: 11, weight: .semibold, color: Theme.secondary), selectionRow, actionRow]
+        let sizeTopSpacing = NSView()
+        sizeTopSpacing.fixed(height: 16)
+        let groups: [NSView] = [label(L("绘图工具"), size: 11, weight: .semibold, color: Theme.secondary),
+            toolRow([.brush, .pencil]), toolRow([.eraser, .fill]), toolRow([.picker, .text]),
+            separator(), sectionHeading("线条"), toolRow([.line, .dashedLine]),
+            toolRow([.arrow, .doubleArrow]), toolRow([.dashedArrow, .moreLines]), separator(),
+            sectionHeading("形状"), fillControl, toolRow([.rectangle, .roundedRectangle]),
+            toolRow([.ellipse, .ellipseBubble]), toolRow([.heart, .more]), separator(), sizeTopSpacing] + buildTextControls()
         let scroll = NSScrollView()
         scroll.hasVerticalScroller = true
         scroll.scrollerStyle = .overlay
@@ -425,6 +498,7 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         document.translatesAutoresizingMaskIntoConstraints = false
         document.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor).isActive = true
         let content = stack(groups, vertical: true, spacing: 4)
+        content.detachesHiddenViews = true
         document.addSubview(content)
         content.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -433,21 +507,18 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
             content.trailingAnchor.constraint(equalTo: document.trailingAnchor, constant: -8),
             content.bottomAnchor.constraint(equalTo: document.bottomAnchor, constant: -16)
         ])
-        groups.filter { !($0 is NSStackView) }.forEach { $0.widthAnchor.constraint(equalTo: content.widthAnchor).isActive = true }
+        groups.filter { $0 is NSStackView || !($0 is NSControl) }.forEach { $0.widthAnchor.constraint(equalTo: content.widthAnchor).isActive = true }
     }
 
     private func showCanvasActions(from anchor: NSView) {
         canvas.finishGesture()
         let menu = NSMenu(title: L("画布操作"))
         let actions: [(String, Selector)] = [
-            (L("画布尺寸…"), #selector(resizeCanvas(_:))),
-            (L("顺时针旋转 90°"), #selector(rotateClockwise(_:))),
             (L("逆时针旋转 90°"), #selector(rotateCounterclockwise(_:))),
             (L("水平翻转"), #selector(flipHorizontal(_:))),
             (L("垂直翻转"), #selector(flipVertical(_:)))
         ]
-        for (index, action) in actions.enumerated() {
-            if index == 1 { menu.addItem(.separator()) }
+        for action in actions {
             let item = NSMenuItem(title: action.0, action: action.1, keyEquivalent: "")
             item.target = self
             menu.addItem(item)
@@ -455,12 +526,12 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         menu.popUp(positioning: nil, at: NSPoint(x: anchor.bounds.maxX + 6, y: anchor.bounds.minY), in: anchor)
     }
 
-    private func showMoreShapes(from anchor: NSView) {
+    private func showMoreShapes(from anchor: NSView, lines: Bool = false) {
         canvas.finishGesture()
         let popover = NSPopover()
         popover.behavior = .transient
         popover.animates = false
-        popover.contentViewController = ShapePickerController(selected: tool) { [weak self, weak popover] shape in
+        popover.contentViewController = ShapePickerController(selected: tool, lines: lines) { [weak self, weak popover] shape in
             self?.selectTool(shape)
             popover?.close()
         }
@@ -471,7 +542,7 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
     private func buildInspector(in parent: NSView) {
         let colorTitle = label(L("颜色"), size: 11, weight: .semibold, color: Theme.secondary)
         hexField.font = .monospacedSystemFont(ofSize: 12, weight: .medium)
-        hexField.fixed(width: 120, height: 22)
+        hexField.fixed(width: inspectorWidth - 16, height: 22)
         hexField.cell?.isScrollable = true
         hexField.cell?.wraps = false
         hexField.setContentCompressionResistancePriority(.required, for: .horizontal)
@@ -484,73 +555,92 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         hexField.setAccessibilityLabel(L("十六进制颜色"))
         currentSwatch.handler = { [weak self] in self?.showColorPanel(nil) }
         currentSwatch.toolTip = L("打开系统色卡")
-        let current = stack([currentSwatch, stack([label(L("当前颜色"), size: 10, color: Theme.secondary), hexField], vertical: true, spacing: 4)], spacing: 10)
-        let palette = stack([], vertical: true, spacing: 5)
-        for row in 0..<2 {
-            let buttons = Theme.palette[(row * 6)..<(row * 6 + 6)].map { value -> NSView in
-                let button = SwatchButton(color: NSColor(hex: value), size: 26)
+        let current = stack([currentSwatch, hexField], vertical: true, spacing: 4)
+        let palette = stack([], vertical: true, spacing: 6)
+        for row in 0..<4 {
+            let buttons = Theme.palette[(row * 3)..<(row * 3 + 3)].map { value -> NSView in
+                let button = SwatchButton(color: NSColor(hex: value), size: 28)
                 button.toolTip = "#" + value
                 button.setAccessibilityLabel(L("预设颜色 #") + value)
                 button.handler = { [weak self] in self?.chooseColor(NSColor(hex: value)) }
                 paletteButtons.append(button)
                 return button
             }
-            palette.addArrangedSubview(stack(buttons, spacing: 5))
+            let row = inspectorRow(buttons, columns: 3)
+            palette.addArrangedSubview(row)
+            row.widthAnchor.constraint(equalTo: palette.widthAnchor).isActive = true
         }
-        let custom = ActionButton(L("更多颜色…"), symbol: "slider.horizontal.3") { [weak self] in self?.showColorPanel(nil) }
+        let custom = ActionButton(L("更多颜色…")) { [weak self] in self?.showColorPanel(nil) }
         custom.style = .quiet
-        custom.fixed(width: 184, height: 32)
-        let recentRow = stack([], spacing: 8)
-        for _ in 0..<5 {
+        custom.fixed(width: inspectorWidth - 16, height: 30)
+        for _ in 0..<3 {
             let button = SwatchButton(color: nil, size: 28)
             recentButtons.append(button)
-            recentRow.addArrangedSubview(button)
         }
-        sizeSlider.applyGrayscaleStyle()
-        sizeSlider.target = self
-        sizeSlider.action = #selector(sizeChanged(_:))
-        sizeSlider.isContinuous = true
-        sizeSlider.setAccessibilityLabel(L("笔画粗细"))
-        sizeSlider.fixed(width: 184)
-        let sizeHeading = stack([label(L("笔画粗细"), size: 11, color: Theme.secondary), NSView(), sizeLabel])
-        sizeHeading.fixed(width: 184)
-        let font = NSSlider(value: 32, minValue: 8, maxValue: 150, target: self, action: #selector(fontChanged(_:)))
-        font.applyGrayscaleStyle()
-        font.isContinuous = true
-        font.setAccessibilityLabel(L("文字大小"))
-        font.fixed(width: 184)
-        let fontHeading = stack([label(L("文字大小"), size: 11, color: Theme.secondary), NSView(), fontSizeLabel])
-        fontHeading.fixed(width: 184)
-        toolLabel.fixed(width: 184)
+        let recentRow = inspectorRow(recentButtons, columns: 3)
+        toolLabel.fixed(width: inspectorWidth - 16)
         toolLabel.maximumNumberOfLines = 2
         toolLabel.lineBreakMode = .byWordWrapping
-        toolTaglineLabel.fixed(width: 184)
-        toolTaglineLabel.maximumNumberOfLines = 2
+        toolTaglineLabel.fixed(width: inspectorWidth - 16)
+        toolTaglineLabel.maximumNumberOfLines = 4
         toolTaglineLabel.lineBreakMode = .byWordWrapping
+        let crop = RailActionButton(kind: .crop) { [weak self] _ in self?.cropSelection(nil) }
+        cropButton = crop
+        crop.isEnabled = false
+        let clear = RailActionButton(kind: .clear) { [weak self] _ in self?.clearCanvas(nil) }
+        let rotate = RailActionButton(kind: .rotate) { [weak self] _ in self?.rotateClockwise(nil) }
+        let resize = RailActionButton(kind: .resize) { [weak self] _ in self?.resizeCanvas(nil) }
+        let more = RailActionButton(kind: .more) { [weak self] button in self?.showCanvasActions(from: button) }
+        let selectionTool = toolRow([.selection])
+        selectionTool.fixed(width: 44)
+        let selectionRow = inspectorRow([selectionTool, crop], columns: 2)
+        let selectionHeading = sectionHeading("选区")
+        selectionHeading.fixed(width: inspectorWidth - 16)
         let items: [NSView] = [toolLabel, toolTaglineLabel,
-            separator(), colorTitle, current, palette, custom, recentRow,
-            separator(), sizeHeading, sizeSlider,
-            fontHeading, font]
+            separator(), colorTitle, current, palette, recentRow, custom,
+            separator(), selectionHeading, selectionRow,
+            inspectorRow([clear, rotate], columns: 2), inspectorRow([resize, more], columns: 2)]
         let content = stack(items, vertical: true, spacing: 9)
         parent.addSubview(content)
         content.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            content.leadingAnchor.constraint(equalTo: parent.leadingAnchor, constant: 16),
-            content.trailingAnchor.constraint(equalTo: parent.trailingAnchor, constant: -16),
+            content.leadingAnchor.constraint(equalTo: parent.leadingAnchor, constant: 8),
+            content.trailingAnchor.constraint(equalTo: parent.trailingAnchor, constant: -8),
             content.topAnchor.constraint(equalTo: parent.topAnchor, constant: 20),
             content.bottomAnchor.constraint(equalTo: parent.bottomAnchor, constant: -20)
         ])
-        items.filter { $0.frame.height == 0 && !($0 is NSStackView) && !($0 is NSControl) }.forEach {
+        items.forEach {
             $0.widthAnchor.constraint(equalTo: content.widthAnchor).isActive = true
         }
+    }
+
+    private func inspectorRow(_ views: [NSView], columns: Int) -> NSStackView {
+        let row = stack([], spacing: 8)
+        row.distribution = .fillEqually
+        for index in 0..<columns {
+            let cell = NSView()
+            row.addArrangedSubview(cell)
+            guard index < views.count else { continue }
+            let view = views[index]
+            cell.addSubview(view)
+            view.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                view.centerXAnchor.constraint(equalTo: cell.centerXAnchor),
+                view.topAnchor.constraint(equalTo: cell.topAnchor),
+                view.bottomAnchor.constraint(equalTo: cell.bottomAnchor)
+            ])
+        }
+        return row
     }
 
     func selectTool(_ tool: PaintTool) {
         canvas.finishGesture()
         self.tool = tool
         if tool != .selection { canvas.selection = nil }
-        toolButtons.forEach { $0.value.selected = $0.key == tool || ($0.key == .more && tool.isExtraShape) }
+        toolButtons.forEach { $0.value.selected = $0.key == tool || ($0.key == .more && tool.isExtraShape && ![PaintTool.ellipseBubble, .heart].contains(tool)) || ($0.key == .moreLines && tool.isLine && ![PaintTool.line, .dashedLine, .arrow, .doubleArrow, .dashedArrow].contains(tool)) }
         toolButtons[.more]?.toolTip = tool.isExtraShape ? L("更多形状 · ") + tool.title : L("更多形状")
+        brushControls.isHidden = tool == .text
+        textControls.isHidden = tool != .text
         toolLabel.stringValue = tool.title
         toolTaglineLabel.stringValue = tool.tagline
         window?.invalidateCursorRects(for: canvas)
@@ -564,7 +654,7 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
             recentColors = UserDefaults.standard.stringArray(forKey: "recentCustomColors") ?? []
             recentColors.removeAll { $0 == self.color.hex }
             recentColors.insert(self.color.hex, at: 0)
-            recentColors = Array(recentColors.prefix(5))
+            recentColors = Array(recentColors.prefix(3))
             UserDefaults.standard.set(recentColors, forKey: "recentCustomColors")
         }
         refreshColors()
@@ -612,6 +702,11 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         brushSize = Swift.max(1, Swift.min(48, size))
         sizeLabel.stringValue = "\(Int(brushSize)) px"
         sizeSlider.doubleValue = Double(brushSize)
+    }
+    @objc private func fontFamilyChanged(_ sender: NSPopUpButton) {
+        textFontFamily = sender.selectedItem?.representedObject as? String
+        sender.toolTip = sender.titleOfSelectedItem
+        window?.makeFirstResponder(canvas)
     }
     @objc private func fontChanged(_ sender: NSSlider) {
         fontSize = Swift.max(8, Swift.min(150, CGFloat(sender.integerValue)))
@@ -684,7 +779,7 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
     }
     func windowDidResize(_ notification: Notification) { layoutCanvas() }
     func windowDidBecomeKey(_ notification: Notification) {
-        recentColors = Array((UserDefaults.standard.stringArray(forKey: "recentCustomColors") ?? []).prefix(5))
+        recentColors = Array((UserDefaults.standard.stringArray(forKey: "recentCustomColors") ?? []).prefix(3))
         refreshColors()
         if NSColorPanel.shared.isVisible {
             NSColorPanel.shared.setTarget(self)
@@ -826,7 +921,8 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 360, height: 120))
         let text = NSTextView(frame: scroll.bounds)
         text.isRichText = false
-        text.font = .systemFont(ofSize: 16)
+        let selectedFont = drawingFont
+        text.font = NSFontManager.shared.convert(selectedFont, toSize: 16)
         text.isVerticallyResizable = true
         text.autoresizingMask = [.width]
         scroll.documentView = text
@@ -834,30 +930,34 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
         scroll.borderType = .bezelBorder
         alert.accessoryView = scroll
         let selectedColor = color
-        let selectedSize = fontSize
+        let insertionPoint = CGPoint(x: floor(point.x), y: floor(point.y))
         alert.beginSheetModal(for: window) { [weak self] response in
             guard response == .alertFirstButtonReturn, let self, !text.string.isEmpty else { return }
             let previous = self.paintDocument.bitmap
             let background = self.paintDocument.bitmap
-            let attributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: selectedSize), .foregroundColor: selectedColor]
-            let available = CGSize(width: CGFloat(previous.width) - point.x, height: CGFloat(previous.height) - point.y)
+            let attributes: [NSAttributedString.Key: Any] = [.font: selectedFont, .foregroundColor: selectedColor]
+            let available = CGSize(width: CGFloat(previous.width) - insertionPoint.x, height: CGFloat(previous.height) - insertionPoint.y)
             let measured = (text.string as NSString).boundingRect(with: available,
                 options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: attributes)
             let width = Swift.max(1, Swift.min(Int(available.width), Int(ceil(measured.width)) + 4))
             let height = Swift.max(1, Swift.min(Int(available.height), Int(ceil(measured.height)) + 4))
             var content = Bitmap(width: width, height: height, color: .clear)
             content.draw { context in
+                context.setShouldAntialias(true)
+                context.setShouldSmoothFonts(false)
+                context.setShouldSubpixelPositionFonts(false)
+                context.setShouldSubpixelQuantizeFonts(true)
                 NSGraphicsContext.saveGraphicsState()
                 NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
                 (text.string as NSString).draw(in: CGRect(x: 1, y: 1, width: width - 1, height: height - 1), withAttributes: attributes)
                 NSGraphicsContext.restoreGraphicsState()
             }
             var bitmap = background
-            bitmap.paste(content, at: point)
+            bitmap.paste(content, at: insertionPoint)
             self.paintDocument.bitmap = bitmap
             self.paintDocument.commit(previous: previous, action: L("添加文字"))
             self.selectTool(.selection)
-            self.canvas.makeFloatingSelection(content: content, background: background, at: point)
+            self.canvas.makeFloatingSelection(content: content, background: background, at: insertionPoint)
         }
         alert.window.makeFirstResponder(text)
     }

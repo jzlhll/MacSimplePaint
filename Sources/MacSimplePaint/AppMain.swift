@@ -185,6 +185,7 @@ struct MacSimplePaintApp {
         let application = NSApplication.shared
         let documents = PaintDocumentController()
         let delegate = AppDelegate()
+        AppearanceMode.current.apply()
         application.setActivationPolicy(.regular)
         application.delegate = delegate
         application.run()

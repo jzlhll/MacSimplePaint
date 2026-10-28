@@ -1,75 +1,11 @@
-# 轻绘 · MacSimplePaint
+# SimplePaint
 
-原生 macOS 画图程序，使用 Swift 和 AppKit。启动即是 1200 × 800 像素白板；采用独立设计的矢量工具图标、左右工具面板和黑白灰交互样式。
+[简体中文](readme_cn.md)
 
-支持 12 种界面语言：简体中文、繁体中文、英语、日语、韩语、法语、德语、西班牙语、葡萄牙语、意大利语、俄语、阿拉伯语。默认跟随系统，也可通过「轻绘 → 语言」选择；手动切换在重新打开应用后生效。未支持的语言回退到英语。菜单、工具说明、提示、弹窗及错误信息使用同一套本地化资源。
+![A quiet morning, drawn in SimplePaint](docs/screenshot-en.jpg)
 
-## 启动
+A simple, native paint app for macOS, inspired by classic Windows Paint.
 
-双击 `build/轻绘.app`。更新构建后，先保存并退出正在运行的旧版，再重新打开应用。可将应用复制到「应用程序」，随后在 Finder 中右键图片，通过「打开方式 → 轻绘」打开。程序不会主动改变图片的默认打开应用。
+Draw a few lines, add some text, or make a quick edit. Familiar tools, and what you see is what you get.
 
-## 开发
-
-支持 macOS 13 及以上版本。安装 Xcode Command Line Tools 后，在项目目录运行：
-
-```bash
-./scripts/build.sh
-./scripts/run.sh
-```
-
-调试构建使用 `./scripts/build.sh debug`。构建先在临时目录打包签名，再整包切换产物；旧包保留在 `.build/retired-apps`，保护运行中的开发副本。默认只构建自测，不替换安装版。命令行构建直接调用系统 Swift 编译器，无第三方依赖；产物位于 `build/轻绘.app`，按当前 Mac 的处理器架构编译，并复用 PasteHub 的本机自签名证书。
-
-也可以用 Xcode 打开 `MacSimplePaint.xcodeproj`，选择 MacSimplePaint 目标运行。分发到其他设备时，按需设置开发者签名与公证。
-
-## 签名与安装
-
-本机 `.local-signing.json` 固定绑定 `PasteHub Local Signing` 证书的准确 SHA-1 指纹，同时保留轻绘的独立 Bundle ID `com.allan.MacSimplePaint`。配置文件不含私钥，已加入 Git 忽略；私钥继续留在钥匙串中。证书不可用时构建直接报错，不回退到临时签名。
-
-构建脚本开启 Hardened Runtime，并校验固定证书与稳定的签名身份。Xcode 工程也使用同名本机证书。迁移电脑时需要一并迁移证书及私钥。
-
-安装或更新到 `/Applications/轻绘.app`：
-
-```bash
-python3 scripts/install_macos.py
-```
-
-已构建时可追加 `--skip-build`。安装前后均校验签名，并注册 Finder「打开方式」。更新已安装版本前须保存并退出该实例；开发版和预览版窗口不被关闭。
-
-## 功能
-
-- 画笔、铅笔、橡皮、连通区域填色、取色与多行文字。
-- 直线、虚线、单箭头、双箭头，以及矩形、圆角矩形、椭圆，以及“更多”中的 24 种形状：多边形、星形、梯形、半圆头矩形、实心箭头、心形、对话框、云朵、圆柱体、立方体和圆锥体等。线条与形状独立分组，按钮仅显示图标，悬停可查看名称；描边与填充仅作用于形状。线条和形状绘制完成后自动选中，可连续拖动，移动时保留原有背景。“更多”以每排四个排列：首排为三种气泡和六边形，第二排为三角形、直角三角形、菱形和五边形，第三排为四向箭头。选中的气泡上方显示黄色旋转按钮，点击顺时针旋转 90°，旋转后仍可移动。笔画粗细最大 48 px，文字字号最大 150 px，滑块左段为 #B5B5B5、右段为 #E5E5E5，保留柔和的明暗差异；左侧工具选中时使用 #DDDDDD 浅灰背景，更多形状弹出面板继续用圆角边框标记选中；描边与填充采用无底色的横排图形选项，以小圆点标记当前模式。
-- 12 个固定色块、系统色卡、十六进制颜色输入，自动持久保存最近 5 个自定义颜色并去重排序。
-- 单画布编辑，矩形选区支持移动、复制、剪切、删除与裁剪。文字和粘贴图片会立即选中，连续拖动松手后仍保留选框；点击选区外、切换工具或按 Escape 结束选中。
-- 调整画布、缩放图片、旋转、翻转、缩放预览与适合窗口。
-- 左侧选区组包含选区、裁剪、清空与更多。裁剪在有效选区下可用；更多提供画布尺寸、旋转和翻转。顶部文件与撤销操作和画布区左缘对齐，文件名位于最右侧；已保存文件可通过旁边的编辑图标原地改名，扩展名保持不变，回车确认、Esc 取消。清空使用无背景的扫帚图标，操作前需弹窗确认，取消保留原内容，清空后支持撤销。
-- 六条使用提示位于底部中央，每次应用回到前台随机显示一条，45 秒后自动消失。
-- 每个文档独立撤销/重做，关闭修改后的文档时提示保存。未命名文档和已修改文档的标题显示 `*`；保存或撤销到已保存状态后移除修改标记。
-- 通过打开对话框、Finder「打开方式」或拖入图片打开文档。Command-V 将图片粘贴到当前画布，必要时自动扩展画布；没有剪贴板工具区。
-- 导入 PNG、JPEG、TIFF、BMP、GIF、HEIC/HEIF、WebP；保存 PNG、JPEG、TIFF 或 BMP。GIF 仅编辑第一帧；导入格式能否解码取决于系统 ImageIO 支持。
-
-## 快捷键
-
-| 操作 | 快捷键 |
-| --- | --- |
-| 新建 / 打开 | Command-N / Command-O |
-| 保存 / 另存为 | Command-S / Shift-Command-S |
-| 撤销 / 重做 | Command-Z / Shift-Command-Z |
-| 复制 / 剪切 / 粘贴 | Command-C / Command-X / Command-V |
-| 全选 / 删除选区 | Command-A / Delete |
-| 裁剪到选区 | Command-K |
-| 画布尺寸 | Shift-Command-R |
-| 适合窗口 / 实际大小 | Command-0 / Command-1 |
-| 放大 / 缩小 | Command-= / Command-- |
-| 画笔 / 铅笔 / 橡皮 / 填色 | B / P / E / G |
-| 取色 / 文字 / 选区 | I / T / M |
-| 直线 / 虚线 / 矩形 / 椭圆 | L / D / R / O |
-| 增减笔画粗细 | ] / [ |
-| 约束形状比例或线条角度 | 绘制时按住 Shift |
-| 取消当前手势与选区 | Escape |
-
-## 文件说明
-
-`Sources/MacSimplePaint` 包含文档管理、位图处理、画布手势和界面。`Resources/Info.plist` 声明图片格式关联；应用图标为白底银杏叶画笔，原图保存在 `Resources/AppIcon-source.png`，由 imagegen 生成；`scripts/make-icon.swift` 生成带透明圆角外沿的多尺寸 PNG，`scripts/package-icon.py` 封装为 `Resources/AppIcon.icns`。`Resources/*.lproj` 保存 `Localizable.strings` 和 `InfoPlist.strings`；脚本构建与 Xcode 均打包这 12 种语言资源。`scripts/build.sh` 构建并封装应用，按图标内容生成资源文件名；安装后刷新应用注册，避免继续使用旧图标缓存。
-
-画布单边限制为 8192 像素，总像素限制为 3200 万。撤销历史最多 20 步，并按图像大小限制快照内存。橡皮擦为白色，图形与文字以位图保存；选区编辑时保留独立内容与底图，避免连续移动破坏背景，可通过撤销修改。JPEG/BMP 导出时将透明区域合成为白色背景。
+The app bundle is only **5.0 MB**. Requires macOS 13 or later.

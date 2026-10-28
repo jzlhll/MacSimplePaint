@@ -6,7 +6,7 @@
 "将图片拖入窗口即可打开" = "Arraste uma imagem para a janela para abri-la";
 "按住 Shift 约束形状比例或角度" = "Segure Shift para fixar proporções ou ângulos";
 "⌘Z 撤销，⇧⌘Z 重做" = "⌘Z desfaz; ⇧⌘Z refaz";
-"轻绘" = "轻绘";
+"轻绘" = "SimplePaint";
 "新建" = "Novo";
 "打开" = "Abrir";
 "保存" = "Salvar";
@@ -156,11 +156,11 @@
 "换个面，发现不一样的世界。" = "Outra face, outro mundo.";
 "向着心中的一点，慢慢靠近。" = "Aproxime-se aos poucos da sua meta.";
 "框住喜欢的，留下想要的。" = "Enquadre o que ama, guarde o essencial.";
-"关于轻绘" = "Sobre 轻绘";
+"关于轻绘" = "Sobre SimplePaint";
 "服务" = "Serviços";
-"隐藏轻绘" = "Ocultar 轻绘";
+"隐藏轻绘" = "Ocultar SimplePaint";
 "显示全部" = "Mostrar tudo";
-"退出轻绘" = "Encerrar 轻绘";
+"退出轻绘" = "Encerrar SimplePaint";
 "打开…" = "Abrir…";
 "最近打开" = "Abrir recentes";
 "关闭窗口" = "Fechar janela";
@@ -178,20 +178,20 @@
 "最小化" = "Minimizar";
 "缩放" = "Zoom";
 "帮助" = "Ajuda";
-"轻绘使用说明" = "Ajuda do 轻绘";
+"轻绘使用说明" = "Ajuda do SimplePaint";
 "暂无最近文件" = "Nenhum arquivo recente";
 "清除记录" = "Limpar menu";
-"轻绘 · MacSimplePaint" = "轻绘 · MacSimplePaint";
+"轻绘 · MacSimplePaint" = "SimplePaint";
 "简单画几笔，留住每一个灵感。\n原生 macOS 画图工具。" = "Poucos traços para guardar cada ideia.\nUm app de desenho nativo para macOS.";
 "语言" = "Idioma";
 "跟随系统" = "Seguir o sistema";
 "语言已更改" = "Idioma alterado";
-"重新打开轻绘后生效。请先保存正在编辑的图片。" = "O novo idioma será aplicado ao reabrir o 轻绘. Salve suas imagens antes de sair.";
+"重新打开轻绘后生效。请先保存正在编辑的图片。" = "O novo idioma será aplicado ao reabrir o SimplePaint. Salve suas imagens antes de sair.";
 "好" = "OK";
 "help.intro" = "Comece com uma tela branca. Escolha uma ferramenta, alterne contorno ou preenchimento em Formas e ajuste a cor, a espessura e o tamanho do texto.";
 "help.gestures" = "Shift fixa proporções ou ângulos. Textos, linhas e formas ficam selecionados e podem ser arrastados várias vezes. É possível copiar, apagar ou recortar seleções. Colar uma imagem grande amplia a tela.";
 "help.colors" = "Há 12 cores predefinidas. Use o painel de cores do sistema para escolher outras. As cinco cores personalizadas mais recentes são salvas automaticamente.";
-"help.files" = "Arraste uma imagem para a janela ou escolha Abrir com → 轻绘 no Finder. Apenas o primeiro quadro de um GIF é editado.";
+"help.files" = "Arraste uma imagem para a janela ou escolha Abrir com → SimplePaint no Finder. Apenas o primeiro quadro de um GIF é editado.";
 "PNG 图片" = "Imagem PNG";
 "JPEG 图片" = "Imagem JPEG";
 "TIFF 图片" = "Imagem TIFF";
@@ -207,3 +207,21 @@
 "确认" = "Confirmar";
 "请输入有效的文件名，不要包含 / 或 :。" = "Insira um nome válido sem / nem :.";
 "无法重命名文件。" = "Não foi possível renomear o arquivo.";
+"字体" = "Fonte";
+"系统字体" = "Fonte do sistema";
+
+"更多线条" = "Mais linhas";
+
+"长短虚线" = "Traços longos e curtos";
+
+"空心三角" = "Triângulo vazio";
+
+"实心三角" = "Triângulo cheio";
+
+"旋转" = "Girar";
+
+"尺寸" = "Tamanho";
+
+"深色模式" = "Modo escuro";
+
+"浅色模式" = "Modo claro";
