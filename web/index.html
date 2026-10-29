@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="轻绘网页版：简单、轻巧的本地绘图工具。">
+  <title>未命名 · 轻绘 SimplePaint</title>
+  <link rel="icon" href="./icon.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <main id="app" class="editor">
+    <header class="header">
+      <img class="app-icon" src="./icon.png" width="30" height="30" alt="轻绘">
+      <div class="file-actions">
+        <button data-action="new" class="file-button"><span data-icon="plus"></span>新建</button>
+        <button data-action="open" class="file-button"><span data-icon="folder"></span>打开</button>
+        <button data-action="save" class="file-button"><span data-icon="save"></span>保存</button>
+        <button data-action="undo" class="icon-button" aria-label="撤销" title="撤销 · ⌘ / Ctrl Z"><span data-icon="undo"></span></button>
+        <button data-action="redo" class="icon-button" aria-label="重做" title="重做 · ⇧⌘Z / Ctrl Y"><span data-icon="redo"></span></button>
+      </div>
+    </header>
+    <div class="status-bar" aria-label="画布状态与缩放">
+      <span id="status">画笔 · 拖动开始绘画</span>
+      <span class="shortcut-hint">按 [ / ] 调整笔画粗细</span>
+      <span id="dimensions">1200 × 800 px</span>
+      <div class="zoom-controls"><button data-action="zoomOut" class="icon-button" aria-label="缩小"><span data-icon="minus"></span></button><button data-action="resetZoom" id="zoom" title="重置为 100%">75%</button><button data-action="zoomIn" class="icon-button" aria-label="放大"><span data-icon="plus"></span></button></div>
+      <div class="appearance" role="group" aria-label="外观"><button data-theme="dark" class="theme-button" aria-label="深色模式" title="深色模式"><span class="theme-chip dark"></span></button><button data-theme="light" class="theme-button" aria-label="浅色模式" title="浅色模式"><span class="theme-chip light"></span></button><button data-theme="system" class="theme-button" aria-label="跟随浏览器" title="跟随浏览器"><span class="theme-chip system"></span></button></div>
+    </div>
+    <div class="body">
+      <aside class="tool-rail" aria-label="绘图工具">
+        <section><h2>绘图工具</h2><div id="drawing-tools" class="tool-grid"></div></section>
+        <section><h2>线条</h2><div id="line-tools" class="tool-grid"></div></section>
+        <section><h2>形状</h2><div class="shape-style" role="group" aria-label="形状样式"><button data-filled="false" aria-pressed="true"><span data-icon="outline"></span>描边</button><button data-filled="true" aria-pressed="false"><span data-icon="filled"></span>填充</button></div><div id="shape-tools" class="tool-grid"></div></section>
+        <section class="size-controls"><div id="brush-controls"><label for="size">笔画粗细 <output id="size-value">6 px</output></label><input id="size" type="range" min="1" max="80" value="6"></div><div id="text-controls" hidden><label for="font-size">文字大小 <output id="font-value">32 px</output></label><input id="font-size" type="range" min="8" max="150" value="32"><label for="font-family">字体</label><select id="font-family"><option value="system-ui">系统字体</option><option value="sans-serif">无衬线</option><option value="serif">衬线</option><option value="monospace">等宽</option><option value="cursive">手写</option></select></div></section>
+      </aside>
+      <section class="workspace" aria-label="绘画区域">
+        <div class="canvas-heading"><span>画布</span><span>按住 Shift 约束形状比例或角度</span></div>
+        <div id="viewport" class="viewport"><div id="stage" class="stage"><div id="canvas-wrap" class="canvas-wrap"><canvas id="canvas" width="1200" height="800" aria-label="绘图画布" tabindex="0"></canvas><canvas id="overlay" width="1200" height="800" aria-hidden="true"></canvas></div></div></div>
+      </section>
+      <aside class="inspector" aria-label="颜色与画布操作">
+        <section class="tool-description"><h1 id="tool-title">画笔</h1><p id="tool-tagline">让灵感，落在画布上。</p></section>
+        <section><h2>颜色</h2><label class="current-color" title="选择颜色"><input id="color-picker" type="color" value="#263843" aria-label="选择颜色"></label><input id="hex" aria-label="十六进制颜色" value="#263843" spellcheck="false" maxlength="7"><div id="palette" class="palette"></div><div id="recent-colors" class="palette recent-colors"></div><button id="more-colors" class="quiet-button">更多颜色…</button></section>
+        <section><h2>选区与画布</h2><div id="canvas-actions" class="tool-grid"></div></section>
+      </aside>
+    </div>
+  </main>
+  <input id="file-input" type="file" accept="image/*" hidden>
+  <dialog id="dialog"><form id="dialog-form"><h2 id="dialog-title"></h2><div id="dialog-content"></div><p id="dialog-error" role="alert"></p><div class="dialog-actions"><button type="button" id="dialog-cancel">取消</button><button type="submit" id="dialog-confirm" class="primary">确定</button></div></form></dialog>
+  <div id="tool-popover" class="popover" popover="auto"></div>
+  <div id="toast" role="status" hidden></div>
+</body>
+</html>

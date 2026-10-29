@@ -3,3 +3,4 @@ build/
 .DS_Store
 .swiftpm/
 .local-signing.json
+__pycache__/

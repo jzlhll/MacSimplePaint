@@ -405,7 +405,7 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
     }
 
     private func toolRow(_ tools: [PaintTool]) -> NSStackView {
-        stack(tools.map { tool in
+        let row = stack(tools.map { tool in
             let button = ToolButton(tool: tool)
             button.handler = { [weak self, weak button] in
                 guard let self else { return }
@@ -416,6 +416,9 @@ final class EditorController: NSWindowController, NSWindowDelegate, NSMenuItemVa
             toolButtons[tool] = button
             return button
         }, spacing: 4)
+        // 滚动条占用横向空间时，两列按钮均分剩余宽度，避免背景被裁切。
+        row.distribution = .fillEqually
+        return row
     }
 
     private func sectionHeading(_ title: String) -> NSView {

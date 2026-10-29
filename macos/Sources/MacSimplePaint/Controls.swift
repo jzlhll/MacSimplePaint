@@ -291,7 +291,7 @@ final class ToolButton: NSButton {
     init(tool: PaintTool) {
         self.tool = tool
         super.init(frame: .zero)
-        fixed(width: 44, height: showsTitle ? 46 : 36)
+        fixed(height: showsTitle ? 46 : 36)
         isBordered = false
         title = ""
         toolTip = tool.title + (tool.shortcut.isEmpty ? "" : " · " + tool.shortcut)
@@ -301,6 +301,7 @@ final class ToolButton: NSButton {
     }
     required init?(coder: NSCoder) { fatalError() }
     @objc private func invoke() { handler?() }
+    override var intrinsicContentSize: NSSize { NSSize(width: 44, height: showsTitle ? 46 : 36) }
     override var isFlipped: Bool { true }
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
@@ -333,7 +334,7 @@ final class ToolButton: NSButton {
         }
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         context.saveGState()
-        context.translateBy(x: 10, y: showsTitle ? 5 : (bounds.height - 25) / 2)
+        context.translateBy(x: (bounds.width - 25) / 2, y: showsTitle ? 5 : (bounds.height - 25) / 2)
         context.setStrokeColor(tint.cgColor)
         context.setFillColor(tint.cgColor)
         context.setLineWidth(1.6)
@@ -404,9 +405,10 @@ final class ShapeStyleControl: NSView {
         let fill = ShapeStyleButton(filled: true) { [weak self] in self?.select(filled: true) }
         buttons = [outline, fill]
         let row = stack(buttons, spacing: 4)
+        row.distribution = .fillEqually
         addSubview(row)
         row.pin(to: self)
-        buttons.forEach { $0.fixed(width: 44, height: 46) }
+        buttons.forEach { $0.fixed(height: 46) }
         updateSelection()
     }
     required init?(coder: NSCoder) { fatalError() }
