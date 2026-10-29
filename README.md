@@ -30,7 +30,7 @@ Open [http://localhost:8080](http://localhost:8080) in a current browser. The ap
 
 The editor layout has a minimum size of **1200 × 800**; smaller browser windows can scroll. This is independent of the image dimensions, which default to 1200 × 800 pixels and can be changed. The status row sits below New/Open/Save, and appearance follows the browser by default, with manual light/dark overrides.
 
-GitHub Pages deploys `web/` when a `webapp*` tag is pushed. Regular branch pushes do not update the published app.
+GitHub Pages serves the root of the `gh-pages` branch. For a web release, tag the source version and publish the files inside `web/` to that branch. Regular `main` pushes do not update the published app.
 
 ### macOS development
 
